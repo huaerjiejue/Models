@@ -5,7 +5,7 @@
 import torch
 import pytest
 import numpy as np
-from u_net import ConvBlock, DownSample, UpSample, UNet
+from u_net.u_net import ConvBlock, DownSample, UpSample, UNet
 
 
 class TestConvBlock:
