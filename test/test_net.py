@@ -25,9 +25,9 @@ class TestConvBlock:
         conv_block = ConvBlock(64, 128, 8)
         x = torch.randn(2, 64, 8, 8)
         t = torch.randn(2, 64, 8, 8)
-        assert conv_block(x, t).shape == (2, 128, 6, 6)
+        assert conv_block(x, t).shape == (2, 128, 8, 8)
         conv_block = ConvBlock(128, 256, 16)
         x = torch.randn(2, 128, 16, 16)
         t = torch.randn(2, 128, 16, 16)
-        assert conv_block(x, t).shape == (2, 256, 14, 14)
+        assert conv_block(x, t).shape == (2, 256, 16, 16)
 

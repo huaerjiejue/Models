@@ -33,13 +33,14 @@ class SelfAttention(nn.Module):
 
 
 class ConvBlock(nn.Module):
-    # b, c_in, h, w -> b, c_out, h-2, w-2
+    # b, c_in, h, w -> b, c_out, h, w
     def __init__(self, in_channels, out_channels, dim, kernel_size=3, stride=1, padding=1):
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
         self.self_attn = SelfAttention(out_channels, dim)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, stride, padding=0)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, stride, padding)
         self.gelu = nn.GELU()
+        self.layer_norm = nn.LayerNorm([out_channels, dim, dim])
 
     def forward(self, x, t):
         assert x.shape == t.shape, f"The shape of x({x.shape}) and t({t.shape}) must be the same"
@@ -49,7 +50,7 @@ class ConvBlock(nn.Module):
         x = self.self_attn(x)
         x = self.conv2(x)
         x = self.gelu(x)
-        return x
+        return self.layer_norm(x)
 
 
 if __name__ == "__main__":
