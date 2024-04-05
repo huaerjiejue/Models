@@ -2,15 +2,16 @@
 # _*_ coding: utf-8 _*_
 # @Time : 2024/3/30 14:38
 # @Author : ZhangKuo
-import torch
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+import torch
 import torch.nn as nn
-from torchinfo import summary
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 
-class Diffusion():
+
+class Diffusion:
     def __init__(self, model, datafile_name, num_steps):
         self.model = model
         self.datafile_name = datafile_name
@@ -28,7 +29,10 @@ class Diffusion():
         self.imgs = self.read_file()
 
     def read_file(self):
-        imgs = [os.path.join(self.datafile_name, img) for img in os.listdir(self.datafile_name)]
+        imgs = [
+            os.path.join(self.datafile_name, img)
+            for img in os.listdir(self.datafile_name)
+        ]
         return imgs
 
     def show_img(self, imgs):
@@ -37,7 +41,7 @@ class Diffusion():
         for i in range(len_imgs):
             img = plt.imread(imgs[i])
             axs[i].imshow(img)
-            axs[i].axis('off')
+            axs[i].axis("off")
 
     def q_x(self, x_0, t, noise):
         assert 0 <= t < self.num_steps
@@ -52,7 +56,7 @@ class Diffusion():
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         for epoch in range(epochs):
             for i, data in enumerate(dataloader):
-                t = torch.randint(0, self.num_steps, (1,batch_size)).to(self.device)
+                t = torch.randint(0, self.num_steps, (1, batch_size)).to(self.device)
                 x_0 = data.to(self.device)
                 noise = torch.randn_like(x_0).to(self.device)
                 x_t = self.q_x(x_0, t, noise)
@@ -64,14 +68,22 @@ class Diffusion():
                 if i % 100 == 0:
                     print(f"Epoch: {epoch}, Step: {i}, Loss: {loss.item()}")
         print("Training Finished!")
-    def test(self):
-        pass
 
     def p_sample(self, x_t, t):
-        pass
+        pred_noise = self.model(x_t)
+        pure_noise = torch.randn_like(x_t).to(self.device)
+        x_t_prev = (
+            1
+            / self.alphas[t]
+            * (x_t - self.betas[t] * pred_noise / self.one_minus_alphas_bar_sqrt[t])
+            + torch.sqrt(self.betas[t]) * pure_noise
+        )
+        x_t_prev = (x_t_prev.clamp(0, 1) * 255).to(torch.uint8)
+        return x_t_prev
 
-
-
-
-
-
+    def test(self, x_t, ts):
+        for t in ts:
+            x_t = self.p_sample(x_t, t)
+            plt.imshow(x_t[0].cpu().numpy().transpose(1, 2, 0))
+            plt.axis("off")
+            plt.show()
